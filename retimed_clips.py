@@ -10,6 +10,7 @@ if len(argv) < 3:
 
 input_dom = etree.parse(argv[1])
 input_root = input_dom.getroot()
+clip_list = input_root.xpath("/xmeml/sequence/media/video//track/clipitem[filter/effect/effectid='timeremap']")
 
 output_xml_stub = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xmeml>
@@ -71,41 +72,42 @@ output_xml_stub = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 output_root = etree.XML(output_xml_stub)
-
-clip_list = input_root.xpath("/xmeml/sequence/media/video//track/clipitem[filter/effect/effectid='timeremap']")
-#clip_list = input_root.xpath("/xmeml/sequence/media/video/track/clipitem")
-
-total_duration = 0
-
 output_track = output_root.xpath("/xmeml/sequence/media/video/track")[0]
 
+clip_nodes = []
+
+def sort_on_start_time(item1, item2):
+	#print "%s:%s %s:%s return:%s" % (item1.get("id"), int(item1.xpath("start")[0].text), item2.get("id"), int(item2.xpath("start")[0].text), int(item2.xpath("start")[0].text) - int(item1.xpath("start")[0].text))
+	return int(item1.xpath("start")[0].text) - int(item2.xpath("start")[0].text)
+
 for index, clip in enumerate(clip_list):
-	
 	file_el = clip.xpath("file")[0]
 	
 	if len(file_el.xpath("pathurl"))==0:
 		full_file_el = input_root.xpath("//clipitem[file/@id='%s']/file[pathurl!='']" % file_el.get("id"))[0] 
 		clip.replace(file_el, full_file_el)
 		
-	print etree.tostring(clip)
-	
+	clip_nodes.append(clip)
+
+clip_nodes.sort(sort_on_start_time)
+
+total_duration = 0
+
+for index, clip in enumerate(clip_nodes):
 	start_el = clip.xpath("start")[0]
 	end_el = clip.xpath("end")[0]
 	
 	timeline_clip_duration = int(end_el.text) - int(start_el.text)
-
-	'''	
-	for when_el in clip.xpath("filter/effect[effectid='timeremap']/parameter[name='graphdict']/keyframe/when"):
-		when_el.text = str((int(when_el.text) - int(start_el.text)))
-	'''
 
 	start_el.text = str(total_duration)
 	total_duration += timeline_clip_duration
 	end_el.text = str(total_duration)
 
 	print "inserting %s at %s" % (clip.xpath("name")[0].text, index)
-	output_track.insert(index, clip)
 	
+	output_track.insert(index, clip)
+
+
 output_root.xpath("/xmeml/sequence/duration")[0].text = str(total_duration)
 output_root.xpath("/xmeml/sequence/name")[0].text = "%s-RETIMED CLIPS" % input_root.xpath("/xmeml/sequence/name")[0].text
 
