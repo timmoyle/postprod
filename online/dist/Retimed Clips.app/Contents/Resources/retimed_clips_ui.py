@@ -1,7 +1,26 @@
 #!/usr/bin/env python
-import os, wx, retimed_clips
+import os, sys, wx, retimed_clips
 import wx.grid as gridlib
 
+class FileDrop(wx.FileDropTarget):
+	def __init__(self, window):
+		wx.FileDropTarget.__init__(self)
+		self.window = window
+
+	def OnDropFiles(self, x, y, filenames):
+		tried_non_xml = False
+		for name in filenames:
+			if (os.path.splitext(name)[1][1:].strip().lower()=='xml') and (retimed_clips.is_valid_xml(name) is True):
+				self.window.add_filename(name)
+			else:
+				tried_non_xml = True
+				
+		if tried_non_xml is True:
+			dlg = wx.MessageDialog(self.window, "This application can only process FCP7 XML files", style=wx.OK|wx.CENTRE|wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+		
+		
 class MainWindow(wx.Frame):
 	def __init__(self, parent, title):
 		wx.Frame.__init__(self, parent, title=title, size=(800,400))
@@ -31,6 +50,9 @@ class MainWindow(wx.Frame):
 
 		self.file_listbox = wx.ListBox(panel, style=wx.LB_EXTENDED)
 		lists_buttons_sizer.Add(self.file_listbox, 1, wx.EXPAND|wx.TOP, border=2)
+		
+		dt = FileDrop(self)
+		self.file_listbox.SetDropTarget(dt)		
 		
 		button_sizer = wx.BoxSizer(wx.VERTICAL)
 		load_button = wx.Button(panel, label='Add XML Files')
