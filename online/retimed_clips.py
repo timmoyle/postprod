@@ -2,6 +2,7 @@
 
 from lxml import etree
 import os, re, getopt
+from copy import deepcopy
 from sys import argv, stderr, exit
 
 def is_valid_xml(from_file):
@@ -88,7 +89,7 @@ def process_file(from_file, to_file):
 	
 		if len(file_el.xpath("pathurl"))==0:
 			full_file_el = input_root.xpath("//clipitem[file/@id='%s']/file[pathurl!='']" % file_el.get("id"))[0] 
-			clip.replace(file_el, full_file_el)
+			clip.replace(file_el, deepcopy(full_file_el))
 		
 		clip_nodes.append(clip)
 
@@ -106,7 +107,7 @@ def process_file(from_file, to_file):
 		total_duration += timeline_clip_duration
 		end_el.text = str(total_duration)
 
-		#print "inserting %s at %s" % (clip.xpath("name")[0].text, index)
+		print "inserting %s at %s:%s" % (clip.xpath("name")[0].text, start_el.text, end_el.text)
 	
 		output_track.insert(index, clip)
 

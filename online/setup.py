@@ -7,6 +7,12 @@ Usage:
 
 from setuptools import setup
 
+last_build_id_file = open("support/.last_build_id", "r+")
+last_build_id = str(int(last_build_id_file.readline())+1)
+last_build_id_file.seek(0, 0)
+last_build_id_file.write(last_build_id)
+last_build_id_file.close()
+
 APP = ['retimed_clips_ui.py']
 DATA_FILES = []
 OPTIONS = {'argv_emulation': True,
@@ -16,8 +22,8 @@ OPTIONS = {'argv_emulation': True,
 							CFBundleName="Retimed Clips",
 							CFBundleDisplayName="Retimed Clips",
 							CFBundlePackageType="APPL",
-							FBundleShortVersionString="0.8.0",
-							CFBundleVersion="0.8.0",
+							FBundleShortVersionString="0.9.1 %s" % last_build_id,
+							CFBundleVersion="0.9.1 build %s" % last_build_id,
 							NSHumanReadableCopyright="tim@timmoyle.com All rights reserved",
 							CFBundleDocumentTypes=[dict(CFBundleTypeExtensions=["xml"],
                                          CFBundleTypeName="XML File",

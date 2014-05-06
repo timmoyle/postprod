@@ -125,6 +125,12 @@ class MainWindow(wx.Frame):
 		dlg.Destroy()
 		
 	def add_filename(self, filename):
+		if filename in self.file_listbox.GetStrings():
+			dlg = wx.MessageDialog(self, "%s is already in the list of FCP7 XML files to process" % filename, style=wx.OK|wx.CENTRE|wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
+			
 		self.file_listbox.InsertItems([filename], self.file_listbox.GetCount())
 	
 	def process_files(self, event):
